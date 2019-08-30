@@ -61,7 +61,7 @@ type MlRequest struct {//每一个单独的object
 }
 
 var (
-  project = "united-strategy-206620"
+  project = "spark-235821"
   model = "face"
   url   = "https://ml.googleapis.com/v1/projects/" + project + "/models/" + model + ":predict"
   scope = "https://www.googleapis.com/auth/cloud-platform"// 我们想访问cloud这个scope

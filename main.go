@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"strconv"
+	// "github.com/olivere/elastic"
 	"github.com/pborman/uuid"
 	"reflect"
 	"context"
@@ -15,7 +16,8 @@ import (
 	"github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"cloud.google.com/go/bigtable" 
+	// "cloud.google.com/go/bigtable" 
+	
 	"path/filepath"
 )
 
@@ -48,10 +50,10 @@ const (//全大些表示一个常量
 	INDEX = "around"//不同应用数据，我们现在用around
 	TYPE = "post"
 	DISTANCE = "200km"
-	ES_URL = "http://35.226.122.73:9200"
-	BUCKET_NAME = "post-image-206620"
-	PROJECT_ID = "united-strategy-206620"
-	BT_INSTANCE = "around-post"
+	ES_URL = "http://35.222.114.189:9200"
+	BUCKET_NAME = "post-images-235821"
+	PROJECT_ID = "spark-235821"
+	// BT_INSTANCE = "around-post"
 	API_PREFIX = "/api/v1"// If deploy together with backend.
 )
 
@@ -73,6 +75,10 @@ var (
   
 
 func main() {
+	// ctx := context.Background()
+
+	// projectID := "spark-235821"
+
 	// Create a client
 	client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
 	if err != nil {
@@ -174,6 +180,7 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	// 人工从form data里读取了数据
 	p := &Post{
 			User:    username.(string),
+			// User:    r.FormValue.("user"),
 			Message: r.FormValue("message"),
 			Location: Location{
 				Lat: lat,
@@ -182,6 +189,8 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := uuid.New()
+
+	
 
 	// image
 	file, _, err := r.FormFile("image")//FormFile:读取file类型的数据类型
@@ -203,6 +212,14 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
 			panic(err)//告诉我们哪行出了错
 	}
 
+	// Update the media link after saving to GCS.
+	p.Url = attrs.MediaLink
+	
+	// Save to ES.
+	saveToES(p, id)//p 变成指针
+
+	
+
 	//file, _, err := r.FormFile("image") 这句话虽然之前已经读过文件了，但是saveToGCS已经把文件存走了，file里已经没有文件了
 	im, header, _ := r.FormFile("image")//读一下用户发来的image这个form
 	defer im.Close()
@@ -215,22 +232,28 @@ func handlerPost(w http.ResponseWriter, r *http.Request) {
   		p.Type = "unknown"
 	}
 	// ML Engine only supports jpeg!!!
-	if suffix == ".jpeg" {// 如果是jpeg，那就调用annotate这个tag
-  		if score, err := annotate(im); err != nil {
-     		http.Error(w, "Failed to annotate the image", http.StatusInternalServerError)
-     		fmt.Printf("Failed to annotate the image %v\n", err)
-     		return
-  		} else {
-     		p.Face = score
-  		}
-	}
+	// if suffix == ".jpeg" {// 如果是jpeg，那就调用annotate这个tag
+  		// if score, err := annotate(im); err != nil {
+     	// 	http.Error(w, "Failed to annotate the image", http.StatusInternalServerError)
+     	// 	fmt.Printf("Failed to annotate the image %v\n", err)
+     	// 	return
+  		// } else {
+     	// 	p.Face = score
+		  // }
+	// 	  return
+	// }
 
 
-	// Update the media link after saving to GCS.
-	p.Url = attrs.MediaLink
+	
 
-	// Save to ES.
-	saveToES(p, id)//p 变成指针
+	
+	// if err != nil {
+	// 	http.Error(w, "Failed to save post to ElasticSearch", http.StatusInternalServerError)
+	// 	fmt.Printf("Failed to save post to ElasticSearch %v.\n", err)
+	// 	return
+	// }
+	// fmt.Printf("Save one post to ElasticSearch: %s, p.Message")
+
 
 	// Save to BigTable.//把ES存的复制到bigTable
 	// saveToBigTable(p, id)
@@ -327,6 +350,7 @@ func saveToGCS(ctx context.Context, r io.Reader, bucketName, name string)(*stora
 
 // Save a post to ES
 func saveToES(p *Post, id string) {
+	fmt.Printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 	// Create a client
 	es_client, err := elastic.NewClient(elastic.SetURL(ES_URL), elastic.SetSniff(false))
 	if err != nil {
