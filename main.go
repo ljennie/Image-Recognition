@@ -50,7 +50,7 @@ const (//全大些表示一个常量
 	INDEX = "around"//不同应用数据，我们现在用around
 	TYPE = "post"
 	DISTANCE = "200km"
-	ES_URL = "http://35.222.114.189:9200"
+	ES_URL = "http://104.197.141.2:9200"
 	BUCKET_NAME = "post-images-235821"
 	PROJECT_ID = "spark-235821"
 	// BT_INSTANCE = "around-post"
@@ -379,6 +379,13 @@ func saveToES(p *Post, id string) {
 // 返回搜索附近别人发的post
 func handlerSearch(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one request for search")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	// w.Header().Set("Access-Control-Allow-Header", "Content-Type")
+	// w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	// w.Write(js)
+
 	lat, _ := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)//64 相当于double in java
     lon, _ := strconv.ParseFloat(r.URL.Query().Get("lon"), 64)
 	// range is optional 
@@ -435,10 +442,11 @@ func handlerSearch(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 			return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(js)
+
+	
+
+	
 
 
 

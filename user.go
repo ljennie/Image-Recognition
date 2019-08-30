@@ -109,6 +109,8 @@ func addUser(user User) bool {
 // If signup is successful, a new session is created.
 func signupHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one signup request")
+	w.Header().Set("Content-Type", "text/plain")//返回结果是文本
+	w.Header().Set("Access-Control-Allow-Origin", "*")//所有人都可以访问
 
 	decoder := json.NewDecoder(r.Body)
 	var u User
@@ -132,8 +134,6 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 		   http.Error(w, "Empty password or username", http.StatusInternalServerError)
 	}
 
-	w.Header().Set("Content-Type", "text/plain")//返回结果是文本
-	w.Header().Set("Access-Control-Allow-Origin", "*")//所有人都可以访问
 }
 
 
@@ -141,6 +141,8 @@ func signupHandler(w http.ResponseWriter, r *http.Request) {
 // If login is successful, a new token is created.
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Received one login request")
+	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	decoder := json.NewDecoder(r.Body)
 	var u User
@@ -166,9 +168,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		   http.Error(w, "Invalid password or username", http.StatusForbidden)
 		   // 不符合用户名密码格式就会返回forbidden
 	}
-
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 
